@@ -28,19 +28,21 @@ keywords: ["Taming Code Reviews", "run-agy-sdk", "Antigravity SDK", "GitHub Acti
 
 # Surviving the PR avalanche: Taming code review fatigue with the Antigravity SDK
 
-**TL;DR:** With AI code assistants boosting coding velocity, human code review has become a major bottleneck due to cognitive fatigue. In this post, I will show you how to automate a "first-pass" review using the Antigravity Python SDK and `run-agy-sdk` to find bugs early, leaving you free to focus on architecture and quality gatekeeping.
+With AI code assistants boosting coding velocity, human code review has become a major bottleneck due to cognitive fatigue. In this post, I will show you how to automate a "first-pass" review using the Antigravity Python SDK and `run-agy-sdk` to find bugs early, leaving you free to focus on architecture and safeguarding quality.
 
 # The cognitive overload of modern code reviews
 
-Every morning, I open my GitHub dashboard and face an avalanche of new pull requests. Since our engineering team started using AI-powered code assistants, our velocity has skyrocketed. We are writing and shipping more code than ever before.
+Every morning, I open my GitHub dashboard and face an avalanche of new pull requests. Since our engineering team started using AI-powered code assistants, our coding velocity has skyrocketed. We are writing and shipping more code than ever before.
 
-But this speed has created a new bottleneck: **cognitive fatigue during code reviews.**
+But as Addy Osmani pointed out, there is an [orchestration tax](https://x.com/addyosmani/status/2059844244907696186) to using AI for coding—the time saved writing code is offset by the time spent reviewing and orchestrating it.
+
+In a team setting, this tax is multiplied. Because AI makes it so easy to generate code, developers often push the orchestration tax onto the reviewer. They generate large changes, run basic checks, and submit PRs, leaving the reviewer to deal with the cognitive load of finding subtle bugs and building a mental model of the code from scratch.
 
 Finding a critical logical bug or a security flaw in a 2,000-line diff is like looking for a needle in a haystack. When you are reviewing your tenth PR of the day, your eyes start to glaze over. That is exactly when bugs slip into production.
 
 To solve this, we need a hybrid approach. We do not need to let AI run completely unsupervised, nor do we need to exhaust human reviewers. Instead, we can automate a **first-pass review**—employing an autonomous agent to run tests, inspect code quality, and flag potential bugs *before* a human developer even looks at the PR.
 
-By offloading the tedious "first pass" search to an AI agent, human reviewers can focus on what they do best: high-level architecture, design feedback, and gatekeeping quality.
+By offloading the tedious "first pass" search to an AI agent, human reviewers can focus on what they do best: high-level architecture, design feedback, and safeguarding quality.
 
 # Why we need automated agentic reviews
 
