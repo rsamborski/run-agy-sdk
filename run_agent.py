@@ -79,13 +79,13 @@ async def main() -> None:
 
     if not api_key:
         print(
-            "::error::API key is missing. Please set the 'api-key' input or GEMINI_API_KEY env var."
+            "::error::API key is missing. Please set the ANTIGRAVITY_API_KEY or GEMINI_API_KEY env var."
         )
         sys.exit(1)
 
     if not github_token:
         print(
-            "::error::GitHub token is missing. Please set the 'github-token' input or GITHUB_TOKEN env var."
+            "::error::GitHub token is missing. Please set the GITHUB_PERSONAL_ACCESS_TOKEN or GITHUB_TOKEN env var."
         )
         sys.exit(1)
 
