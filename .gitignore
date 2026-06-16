@@ -1,0 +1,13 @@
+# Temporary blueprint directories
+tmp-run-gemini-cli/
+antigravity-sdk-python/
+
+# Local Gemini / Antigravity runtime dirs
+.gemini/
+gemini-artifacts/
+
+# Logs
+*.log
+
+# Other tools
+.ruff_cache

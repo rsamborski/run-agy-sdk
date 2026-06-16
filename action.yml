@@ -1,0 +1,131 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: 'Antigravity Review Action'
+description: 'Execute the Google Antigravity SDK autonomous agent to review and improve code'
+author: 'Remigiusz Samborski'
+inputs:
+  api-key:
+    description: 'The Google Gemini / Antigravity API key to authenticate language model interactions'
+    required: true
+  github-token:
+    description: 'GitHub token for pull request interactions and automated code feedback'
+    required: false
+    default: '${{ github.token }}'
+  mode:
+    description: 'Operational mode of the agent. Allowed: "goal" (multi-turn problem solving), "one-shot" (one query), "review" (code audit)'
+    required: false
+    default: 'goal'
+  goal-prompt:
+    description: 'The description of the problem or requirements the agent is being instructed to resolve'
+    required: false
+  sandbox-profile:
+    description: 'Enables kernel-level or process-level containment ("true" / "false" or specific profile name/path)'
+    required: false
+    default: 'true'
+  trust-workspace:
+    description: 'Explicitly trust the repository workspace directory ("true" / "false") to bypass internal checks'
+    required: false
+    default: 'false'
+  prompt:
+    description: 'The prompt or command to execute.'
+    required: false
+  upload_artifacts:
+    description: 'Whether to upload artifacts.'
+    required: false
+    default: 'false'
+  workflow_name:
+    description: 'The GitHub workflow name.'
+    required: false
+    default: '${{ github.workflow }}'
+  additional_context:
+    description: 'Additional context for the agent.'
+    required: false
+  github_pr_number:
+    description: 'The Pull Request number.'
+    required: false
+    default: '${{ github.event.pull_request.number }}'
+  github_issue_number:
+    description: 'The Issue number.'
+    required: false
+    default: '${{ github.event.issue.number }}'
+
+outputs:
+  response:
+    description: 'The clean final response text returned by the Antigravity agent execution'
+    value: '${{ steps.agy_run.outputs.response }}'
+  stats:
+    description: 'JSON object summarizing execution metrics, token expenditures, and overall latencies'
+    value: '${{ steps.agy_run.outputs.stats }}'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 'Set up Python'
+      uses: 'actions/setup-python@v6'
+      with:
+        python-version: '3.11'
+
+    - name: 'Install Antigravity SDK'
+      shell: 'bash'
+      run: |-
+        python3 -m pip install --upgrade pip
+        python3 -m pip install google-antigravity tomli
+
+    - name: 'Run Antigravity SDK Agent'
+      id: 'agy_run'
+      shell: 'bash'
+      run: |-
+        set -euo pipefail
+
+        # Determine prompt text
+        PROMPT_TEXT="${PROMPT}"
+        if [ -z "${PROMPT_TEXT}" ]; then
+          if [ "${MODE}" = "review" ]; then
+            PROMPT_TEXT="/antigravity-review"
+          else
+            PROMPT_TEXT="${GOAL_PROMPT}"
+          fi
+        fi
+
+        if [ -z "${PROMPT_TEXT}" ]; then
+          echo "::error::Prompt or goal-prompt is required." >&2
+          exit 1
+        fi
+
+        export PROMPT="${PROMPT_TEXT}"
+        export GEMINI_API_KEY="${ANTIGRAVITY_API_KEY:-$GEMINI_API_KEY}"
+        export GITHUB_TOKEN="${GITHUB_TOKEN}"
+        export TRUST_WORKSPACE="${TRUST_WORKSPACE}"
+
+        python3 "${GITHUB_ACTION_PATH}/run_agent.py"
+      env:
+        TRUST_WORKSPACE: '${{ inputs.trust-workspace }}'
+        PROMPT: '${{ inputs.prompt }}'
+        MODE: '${{ inputs.mode }}'
+        GOAL_PROMPT: '${{ inputs.goal-prompt }}'
+        ANTIGRAVITY_API_KEY: '${{ inputs.api-key }}'
+        GEMINI_API_KEY: '${{ inputs.api-key }}'
+        REPOSITORY: '${{ github.repository }}'
+        PULL_REQUEST_NUMBER: '${{ inputs.github_pr_number }}'
+        GITHUB_PR_NUMBER: '${{ inputs.github_pr_number }}'
+        GITHUB_ISSUE_NUMBER: '${{ inputs.github_issue_number }}'
+        ADDITIONAL_CONTEXT: '${{ inputs.additional_context || inputs.goal-prompt }}'
+        GITHUB_TOKEN: '${{ inputs.github-token }}'
+        TITLE: '${{ github.event.pull_request.title || github.event.issue.title }}'
+        DESCRIPTION: '${{ github.event.pull_request.body || github.event.issue.body }}'
+        EVENT_NAME: '${{ github.event_name }}'
+        IS_PULL_REQUEST: '${{ !!github.event.pull_request }}'
+        ISSUE_NUMBER: '${{ github.event.pull_request.number || github.event.issue.number }}'
+        GITHUB_ACTION_PATH: '${{ github.action_path }}'
