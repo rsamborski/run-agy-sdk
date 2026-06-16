@@ -45,8 +45,6 @@ jobs:
       - name: 'Checkout Repository'
         uses: 'actions/checkout@v6'
         with:
-          # Fetches the PR merge commit so the agent reviews the proposed changes
-          ref: ${{ github.event.pull_request.number && format('refs/pull/{0}/merge', github.event.pull_request.number) || github.ref }}
           persist-credentials: false
 
       - name: 'Run Antigravity PR Review'
