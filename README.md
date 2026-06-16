@@ -65,6 +65,10 @@ jobs:
 
 For a complete workflow template that supports both **Automated PR Auditing** (runs automatically on code updates) and **Comment-Triggered Reviews** (triggered via PR comments), please refer to the reference workflow in [.github/workflows/antigravity-autonomous-review.yml](.github/workflows/antigravity-autonomous-review.yml).
 
+## 🤝 Acknowledgments
+
+This project is inspired by [run-gemini-cli](https://github.com/google-github-actions/run-gemini-cli).
+
 ## 📄 License
 
 This project is licensed under the Apache License, Version 2.0. See the [LICENSE](LICENSE) file for the full license text.
