@@ -130,20 +130,23 @@ jobs:
           sandbox-profile: 'true'
 ```
 
-For a full workflow template supporting both automated PR reviews and comment-triggered reviews, refer to the [workflows](https://github.com/rsamborski/run-agy-sdk/blob/main/.github/workflows) folder in the repository. Feel free to fork my example and build your own automation.
-
 **Important:** Pin the action version to a specific commit SHA (e.g., `rsamborski/run-agy-sdk@<commit-sha>`) rather than using `@main`. This prevents unexpected breaks from upstream updates.
+
+While you can reference `run-agy-sdk` directly in your workflows, its real power lies in using it as a blueprint. I encourage you to [fork the repository](https://github.com/rsamborski/run-agy-sdk) and use it as a template to build your own custom, agentic GitHub Actions. By modifying the safety policies, custom tools, or prompts in `run_agent.py`, you can tailor the agent's review behavior to your team's specific codebase, style guidelines, and compliance rules.
+
+For a full workflow template supporting both automated PR reviews and comment-triggered reviews, refer to the [workflows](https://github.com/rsamborski/run-agy-sdk/blob/main/.github/workflows) folder in the repository.
 
 # Conclusions
 
-Automating code reviews is a necessity as AI-generated code volumes increase. By using `run-agy-sdk`, you can run the Antigravity SDK to review PRs automatically and prevent production outages.
+Automating code reviews is a necessity as AI-generated code volumes increase. By using `run-agy-sdk`, you can run the Antigravity SDK to review PRs automatically and shift more of the burden of code quality assurance away from human reviewers.
 
 - Access the full source code in the [GitHub Repository](https://github.com/rsamborski/run-agy-sdk).
-- Read the documentation to customize the prompts and mode.
+- Read the documentation to customize the prompts and mode
+- Feel free to fork the repository and build your own automation.
 
 # Acknowledgments
 
-This project was inspired by the [run-gemini-cli](https://github.com/google-github-actions/run-gemini-cli) action, while shifting to the recently released Antigravity SDK.
+This project was inspired by the [run-gemini-cli](https://github.com/google-github-actions/run-gemini-cli) action, while shifting to the recently released Antigravity SDK. It is a personal sample implementation of how to run the Antigravity SDK in a GitHub Action, and is not an officially supported Google product.
 
 # Let’s connect!
 
