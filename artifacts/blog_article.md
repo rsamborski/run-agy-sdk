@@ -8,7 +8,7 @@ keywords: ["Taming Code Reviews", "run-agy-sdk", "Antigravity SDK", "GitHub Acti
 {
   "@context": "https://schema.org",
   "@type": "TechArticle",
-  "headline": "Surviving the PR avalanche: Taming code review fatigue with the Antigravity SDK",
+  "headline": "Taming code review fatigue with the Antigravity SDK",
   "description": "Learn how to automate the first pass of GitHub PR reviews using the Antigravity SDK. Offload cognitive load and catch bugs early.",
   "inLanguage": "en",
   "author": {
@@ -26,11 +26,11 @@ keywords: ["Taming Code Reviews", "run-agy-sdk", "Antigravity SDK", "GitHub Acti
 }
 </script>
 
-# Surviving the PR avalanche: Taming code review fatigue with the Antigravity SDK
+# Taming code review fatigue with the Antigravity SDK
 
 With AI code assistants boosting coding velocity, human code review has become a major bottleneck due to cognitive fatigue. In this post, I will show you how to automate a "first-pass" review using the [Antigravity Python SDK](https://antigravity.google/product/antigravity-sdk) and the [run-agy-sdk](https://github.com/rsamborski/run-agy-sdk) composite [GitHub Action](https://github.com/features/actions) to find bugs early, leaving you free to focus on architecture and safeguarding quality.
 
-# The cognitive overload of modern code reviews
+## The cognitive overload of modern code reviews
 
 Every morning, I open my GitHub dashboard and face an avalanche of new pull requests. Since our engineering team started using AI-powered code assistants, our coding velocity has skyrocketed. We are writing and shipping more code than ever before.
 
@@ -44,7 +44,7 @@ To solve this, we need a hybrid approach. We do not need to let AI run completel
 
 By offloading the tedious "first pass" search to an AI agent, human reviewers can focus on what they do best: high-level architecture, design feedback, and safeguarding quality.
 
-# Why we need automated agentic code reviews
+## Why we need automated agentic code reviews
 
 AI-generated code can be deceptively good. It is often clean, well-documented, and syntactically correct. This makes it harder for human reviewers to spot subtle logical bugs or security vulnerabilities that might not be immediately obvious.
 
@@ -60,7 +60,7 @@ To build a robust review pipeline:
 
 This is why I created a demonstrative GitHub Action using the Antigravity SDK: [run-agy-sdk](https://github.com/rsamborski/run-agy-sdk).
 
-# Introducing run-agy-sdk
+## What is run-agy-sdk?
 
 The [run-agy-sdk](https://github.com/rsamborski/run-agy-sdk) is a composite GitHub Action that runs the Antigravity Python SDK (`google-antigravity`) directly on the GitHub Actions host runner.
 
@@ -68,11 +68,11 @@ The [run-agy-sdk](https://github.com/rsamborski/run-agy-sdk) is a composite GitH
 
 By running directly on the host, the Antigravity SDK has access to the host's Docker daemon. This allows the SDK to spawn Docker-based MCP servers (like the GitHub MCP server) to read files, run tests, and post reviews.
 
-This project was inspired by the [run-gemini-cli](https://github.com/google-github-actions/run-gemini-cli) action.
-
 ## Demonstration walkthrough
 
-*(Placeholder: Quick screencast showcasing the action reviewing a PR in real-time)*
+The demo below shows the action triggered by a new PR:
+
+![Demo screencast](artifacts/antigravity_pr_review.gif)
 
 # Implementation: How to install the action in your repo
 
@@ -88,7 +88,7 @@ The action requires a Google Gemini or Antigravity API key to authenticate langu
 
 ## Step 2: Configure the GitHub Actions workflow
 
-Create a new file in your repository at `.github/workflows/antigravity-review.yml` and add the following configuration:
+Add a new file in your repository at `.github/workflows/antigravity-review.yml` and add the following configuration:
 
 ```yaml
 name: '🔎 Antigravity PR Review'
@@ -130,7 +130,7 @@ jobs:
           sandbox-profile: 'true'
 ```
 
-**Note:** For a complete workflow template supporting both automated PR reviews and comment-triggered reviews, refer to the [antigravity-autonomous-review.yml template](https://github.com/rsamborski/run-agy-sdk/blob/main/.github/workflows/antigravity-autonomous-review.yml) in the repository.
+For a full workflow template supporting both automated PR reviews and comment-triggered reviews, refer to the [workflows](https://github.com/rsamborski/run-agy-sdk/blob/main/.github/workflows) folder in the repository. Feel free to fork my example and build your own automation.
 
 **Important:** Pin the action version to a specific commit SHA (e.g., `rsamborski/run-agy-sdk@<commit-sha>`) rather than using `@main`. This prevents unexpected breaks from upstream updates.
 
@@ -140,6 +140,10 @@ Automating code reviews is a necessity as AI-generated code volumes increase. By
 
 - Access the full source code in the [GitHub Repository](https://github.com/rsamborski/run-agy-sdk).
 - Read the documentation to customize the prompts and mode.
+
+# Acknowledgments
+
+This project was inspired by the [run-gemini-cli](https://github.com/google-github-actions/run-gemini-cli) action, while shifting to the recently released Antigravity SDK.
 
 # Let’s connect!
 
