@@ -28,6 +28,8 @@ keywords: ["Taming Code Reviews", "run-agy-sdk", "Antigravity SDK", "GitHub Acti
 
 # Taming code review fatigue with the Antigravity SDK
 
+![Blog Hero Image](artifacts/blog_hero_image_medium.png)
+
 With AI code assistants boosting coding velocity, human code review has become a major bottleneck due to cognitive fatigue. In this post, I will show you how to automate a "first-pass" review using the [Antigravity Python SDK](https://antigravity.google/product/antigravity-sdk) and the [run-agy-sdk](https://github.com/rsamborski/run-agy-sdk) composite [GitHub Action](https://github.com/features/actions) to find bugs early, leaving you free to focus on architecture and safeguarding quality.
 
 ## The cognitive overload of modern code reviews
@@ -70,6 +72,8 @@ The [run-agy-sdk](https://github.com/rsamborski/run-agy-sdk) is a composite GitH
 ## Why run on the host instead of a container?
 
 By running directly on the host, the Antigravity SDK has access to the host's Docker daemon. This allows the SDK to spawn Docker-based MCP servers (like the GitHub MCP server) to read files, run tests, and post reviews.
+
+To ensure the security of the CI/CD pipeline, the workflow is explicitly protected from running automatically on forks, preventing unauthorized code execution. The automated review job will only run if the pull request originates from the same repository ([see here](https://github.com/rsamborski/run-agy-sdk/blob/da0ff77fc9dfc82e5ad89a430bc51476aeb8f867/.github/workflows/antigravity-autonomous-review.yml#L45)). Additionally, on-demand reviews triggered by commenting `@agy /review` are restricted so that they can only be initiated by maintainers ([see here](https://github.com/rsamborski/run-agy-sdk/blob/da0ff77fc9dfc82e5ad89a430bc51476aeb8f867/.github/workflows/antigravity-autonomous-review.yml#L59-L61)).
 
 ## Demonstration walkthrough
 
