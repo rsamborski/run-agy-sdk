@@ -50,13 +50,15 @@ AI-generated code can be deceptively good. It is often clean, well-documented, a
 
 In a large codebase, manually verifying every change is simply not feasible. This is why we need autonomous agents that can step into the codebase and analyze it from a fresh perspective.
 
-Moreover, each model and agent harness has its own blind spots. It is likely to miss its own logical bugs and security vulnerabilities. It is for this reason that we need autonomous agents that can step into the codebase and analyze it from a fresh perspective.
+But if a developer used an LLM to generate the code, how can we trust another AI to find the bugs? The answer lies in the agent architecture and context separation.
+
+Developers might write code using any tool — whether it's the Gemini CLI, a local IDE extension, or various models like Gemini 3.5 Flash or Gemini 3.1 Pro. The reviewer, however, is a managed Antigravity Agent running via a separate SDK integration. This agent has a specialized, low-freedom persona and strict system instructions that force it to act as an adversarial code auditor rather than a developer. Furthermore, it operates in an isolated environment. Because it has a different system prompt, safety guardrails, and context boundaries, the agent reviews the changes with a completely fresh perspective, catching logical bugs and vulnerabilities that the original generator might miss.
 
 To build a robust review pipeline:
 
-1. **Use managed agents:** Leverage an autonomous agent (like the managed [Antigravity Agent](https://ai.google.dev/gemini-api/docs/antigravity-agent)) to review the code. The agent can use advanced reasoning to explore files, call tools, and verify logic.
-2. **Apply specialized review environments:** Run reviews inside isolated workspaces or sandboxes to prevent shell or arbitrary code execution risks.
-3. **Leverage agentic workflows:** Enable the agent to use tools via Model Context Protocol (MCP) servers to interact directly with the environment, read commits, and write pull request reviews.
+1. **Use managed agents:** Leverage a managed [Antigravity Agent](https://ai.google.dev/gemini-api/docs/antigravity-agent) configured via the SDK to review the code. The agent can use advanced reasoning to explore files and verify logic under strict guidelines.
+2. **Apply specialized review environments:** Run reviews inside isolated workspaces or sandboxes with custom policies to prevent shell or arbitrary code execution risks.
+3. **Leverage agentic workflows:** Enable the agent to use the GitHub MCP server to interact directly with the environment to write pull request comments and reviews.
 
 This is why I created a demonstrative GitHub Action using the Antigravity SDK: [run-agy-sdk](https://github.com/rsamborski/run-agy-sdk).
 
