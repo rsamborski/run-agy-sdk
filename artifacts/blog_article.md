@@ -54,13 +54,14 @@ But if a developer used an LLM to generate the code, how can we trust another AI
 
 Developers might write code using any tool — whether it's the Gemini CLI, a local IDE extension, or various models like Gemini 3.5 Flash or Gemini 3.1 Pro. The reviewer, however, is a managed Antigravity Agent running via a separate SDK integration. This agent has a specialized, low-freedom persona and strict system instructions that force it to act as an adversarial code auditor rather than a developer. Furthermore, it operates in an isolated environment. Because it has a different system prompt, safety guardrails, and context boundaries, the agent reviews the changes with a completely fresh perspective, catching logical bugs and vulnerabilities that the original generator might miss.
 
-To build a robust review pipeline:
+To demonstrate it in practice I created an agentic review pipeline, which:
 
-1. **Use managed agents:** Leverage a managed [Antigravity Agent](https://ai.google.dev/gemini-api/docs/antigravity-agent) configured via the SDK to review the code. The agent can use advanced reasoning to explore files and verify logic under strict guidelines.
-2. **Apply specialized review environments:** Run reviews inside isolated workspaces or sandboxes with custom policies to prevent shell or arbitrary code execution risks.
-3. **Leverage agentic workflows:** Enable the agent to use the GitHub MCP server to interact directly with the environment to write pull request comments and reviews.
+1. Leverages a managed [Antigravity Agent](https://ai.google.dev/gemini-api/docs/antigravity-agent) configured via the SDK to review the code. The agent uses advanced reasoning to explore files and verify logic under strict guidelines.
+2. Runs reviews inside isolated workspaces or sandboxes with custom policies to prevent shell or arbitrary code execution risks.
+3. Enables the agent to use the GitHub MCP server to interact directly with the environment to write pull request comments and reviews.
+4. Avoids using the `synchronize` trigger in pull request workflows to prevent redundant review runs and endless loops. Instead, runs reviews on `opened` and `reopened` events, and triggers subsequent passes manually by posting a `@agy /review` comment on the PR.
 
-This is why I created a demonstrative GitHub Action using the Antigravity SDK: [run-agy-sdk](https://github.com/rsamborski/run-agy-sdk).
+You can find the code at [run-agy-sdk](https://github.com/rsamborski/run-agy-sdk).
 
 ## What is run-agy-sdk?
 
@@ -97,7 +98,7 @@ name: '🔎 Antigravity PR Review'
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, reopened]
   workflow_dispatch:
 
 concurrency:
