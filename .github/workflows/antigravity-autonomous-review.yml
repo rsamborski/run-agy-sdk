@@ -40,7 +40,9 @@ jobs:
   # Job 1: Antigravity Code Review on PR creation or updates
   antigravity-code-review:
     name: 'PR Automated Review'
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     uses: ./.github/workflows/antigravity-review.yml
     with:
       pull_request_number: ${{ inputs.pull_request_number }}
@@ -54,6 +56,9 @@ jobs:
     if: |
       github.event_name == 'issue_comment' &&
       github.event.issue.pull_request != null &&
+      (github.event.comment.author_association == 'OWNER' ||
+       github.event.comment.author_association == 'MEMBER' ||
+       github.event.comment.author_association == 'COLLABORATOR') &&
       (contains(github.event.comment.body, '@agy /review'))
     uses: ./.github/workflows/antigravity-review.yml
     with:
