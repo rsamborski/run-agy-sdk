@@ -1,0 +1,39 @@
+LinkedIn:
+
+Are you tired of reviewing long AI assisted pull requests? 🤖
+
+AI assistants speed up coding. They also increase the number of PRs you must review. You pay an orchestration tax. Reviewing huge diffs wastes the time you saved writing code and causes cognitive fatigue. 📉
+
+What you need is a hybrid approach. Automate the first pass of the review with an AI agent. Let it find bugs and security flaws before you look at the code, so you can keep your focus on architecture and design. 🏗️
+
+For this very reason I built an agentic review pipeline using the Antigravity Python SDK and GitHub Actions. 🚀
+
+The pipeline works like this:
+• Uses a managed Antigravity Agent to audit code logic
+• Runs inside an isolated workspace to prevent code execution risks
+• Interacts with the GitHub MCP server to post review comments
+• Triggers on PR open or via a comment command
+
+Link to the full article and the GitHub repo in the comments 👇
+
+#Antigravity #CodeReview #GitHubActions #AI #DevOps
+
+---
+
+Twitter/Bluesky:
+
+Tired of reviewing long AI assisted PRs? 🤖
+
+Automate the first pass review using the Antigravity SDK and GitHub Actions. 🚀
+Let an agent find logical bugs before you look at the code. 🐞
+
+Link to the article and repo in the comments! 👇
+
+#Antigravity #CodeReview #GitHubActions #AI #DevOps
+
+---
+
+Comment/tweat:
+
+Article: [LINK]
+Repo: https://github.com/rsamborski/run-agy-sdk
