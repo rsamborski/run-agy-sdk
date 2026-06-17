@@ -23,7 +23,7 @@ name: '🔎 Antigravity PR Review'
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, reopened]
   workflow_dispatch: # Allows manual trigger from the Actions tab
 
 concurrency:
