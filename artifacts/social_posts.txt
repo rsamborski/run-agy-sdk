@@ -1,35 +1,38 @@
 LinkedIn:
 
-Are you tired of reviewing long AI assisted pull requests? 🤖
+Yesterday, Gemini CLI transitioned to Antigravity CLI. It's time to build your migration path. 🚀
 
-AI assistants speed up coding. They also increase the number of PRs you must review. You pay an orchestration tax. Reviewing huge diffs wastes the time you saved writing code and causes cognitive fatigue. 📉
+AI assistants speed up coding. They also increase your pull request volume. You pay an orchestration tax. Reviewing huge diffs wastes the time you saved writing code and causes cognitive fatigue. 📉
 
-What you need is a hybrid approach. Automate the first pass of the review with an AI agent. Let it find bugs and security flaws before you look at the code, so you can keep your focus on architecture and design. 🏗️
+You need a hybrid approach. Automate your first-pass PR reviews with an AI agent. Let it find bugs and security flaws before you look at the code. You can then keep your focus on architecture and design. 🏗️
 
-For this very reason I built an agentic review pipeline using the Antigravity Python SDK and GitHub Actions. 🚀
+Read my new article: "Building an agentic PR reviewer with Antigravity SDK". 💡
+
+Learn how to build an agentic review pipeline using the Antigravity Python SDK and GitHub Actions.
 
 The pipeline works like this:
-• Uses a managed Antigravity Agent to audit code logic
-• Runs inside an isolated workspace to prevent code execution risks
-• Interacts with the GitHub MCP server to post review comments
-• Triggers on PR open or via a comment command
+• Uses a managed Antigravity Agent to audit code logic.
+• Runs inside an isolated workspace to prevent code execution risks.
+• Interacts with the GitHub MCP server to post review comments.
+• Triggers on PR open or via a comment command.
 
 Link to the full article and the GitHub repo in the comments 👇
 
-#Antigravity #CodeReview #GitHubActions #AI #DevOps
+#Antigravity #CodeReview #GitHubActions #AI #DevOps #GeminiCLI
 
 ---
 
 Twitter/Bluesky:
 
-Tired of reviewing long AI assisted PRs? 🤖
+Yesterday, Gemini CLI transitioned to Antigravity CLI! 🚀
 
-Automate the first pass review using the Antigravity SDK and GitHub Actions. 🚀
-Let an agent find logical bugs before you look at the code. 🐞
+Read my new guide: "Building an agentic PR reviewer with Antigravity SDK".
 
-Link to the article and repo in the comments! 👇
+Automate your first pass PR reviews and avoid the AI orchestration tax. Let an agent find bugs before you review the code! 🐞
 
-#Antigravity #CodeReview #GitHubActions #AI #DevOps
+Link below! 👇
+
+#Antigravity #CodeReview #GitHubActions #AI #DevOps #GeminiCLI
 
 ---
 

@@ -30,9 +30,9 @@ keywords: ["Antigravity CLI migration", "run-agy-sdk", "Antigravity SDK", "GitHu
 
 ![Blog Hero Image](artifacts/blog_hero_image_medium.png)
 
-As announced in this [blog post](https://developers.googleblog.com/an-important-update-transitioning-gemini-cli-to-antigravity-cli/) on June 18, 2026, Gemini CLI and Gemini Code Assist IDE extensions will stop serving requests for Google AI Pro and Ultra, as well as those using it free of charge using Gemini Code Assist for individuals. Google is unifying its AI terminal tools by transitioning the community-focused Gemini CLI into Antigravity CLI, a new agent-first platform built for complex, multi-agent workflows.
+As announced in yesterday's [blog post](https://developers.googleblog.com/an-important-update-transitioning-gemini-cli-to-antigravity-cli/), Gemini CLI and Gemini Code Assist IDE extensions stopped serving requests for Google AI Pro and Ultra, as well as those using it free of charge using Gemini Code Assist for individuals. Google has unified its AI terminal tools by transitioning the community-focused Gemini CLI into Antigravity CLI, a new agent-first platform built for complex, multi-agent workflows.
 
-With this transition timeline in place, development teams relying on Gemini CLI for repository management and automated tasks must establish a migration path. In this post, I will show you how to transition seamlessly by building an automated "first-pass" pull request reviewer using the Google [Antigravity SDK](https://antigravity.google/product/antigravity-sdk) and the [run-agy-sdk](https://github.com/rsamborski/run-agy-sdk) composite [GitHub Action](https://github.com/features/actions).
+With this transition now in effect, development teams relying on Gemini CLI for repository management and automated tasks must establish a migration path. In this post, I will show you how to transition seamlessly by building an automated "first-pass" pull request reviewer using the Google [Antigravity SDK](https://antigravity.google/product/antigravity-sdk) and the [run-agy-sdk](https://github.com/rsamborski/run-agy-sdk) composite [GitHub Action](https://github.com/features/actions).
 
 ## The orchestration tax
 
