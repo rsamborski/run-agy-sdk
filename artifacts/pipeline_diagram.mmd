@@ -1,0 +1,21 @@
+flowchart TD
+    classDef user fill:#e1f5fe,stroke:#0288d1,stroke-width:2px;
+    classDef github fill:#f5f5f5,stroke:#9e9e9e,stroke-width:2px;
+    classDef sandbox fill:#e8f5e9,stroke:#388e3c,stroke-width:2px;
+    classDef agent fill:#fff3e0,stroke:#f57c00,stroke-width:2px;
+    classDef mcp fill:#f3e5f5,stroke:#8e24aa,stroke-width:2px;
+
+    Dev["👨‍💻 Developer (IDE/CLI/LLMs)"]:::user -->|Creates/Updates PR| PR["GitHub Pull Request"]:::github
+    
+    PR -->|Triggers on 'opened', 'reopened',<br/>or '@agy /review' comment| GHA["GitHub Actions Runner"]:::github
+    
+    subgraph Sandbox [Isolated Sandbox / Workspace]
+        direction TB
+        GHA --> SDK["run-agy-sdk Action"]:::sandbox
+        SDK -->|Initializes with strict guidelines| Agent["🤖 Managed Antigravity Agent<br/>(Adversarial Code Auditor)"]:::agent
+        Agent <-->|Interacts via| MCP["GitHub MCP Server"]:::mcp
+    end
+    
+    MCP -->|Reads diffs & files| PR
+    Agent -->|Audits logic & security<br/>with a fresh perspective| Agent
+    MCP -->|Writes inline comments & summary| PR
