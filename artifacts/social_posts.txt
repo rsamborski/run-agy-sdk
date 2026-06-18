@@ -38,5 +38,5 @@ Link below! 👇
 
 Comment/tweat:
 
-Article: [LINK]
+Article: https://medium.com/google-cloud/building-an-agentic-pr-reviewer-with-antigravity-sdk-b22aac8956b4
 Repo: https://github.com/rsamborski/run-agy-sdk
