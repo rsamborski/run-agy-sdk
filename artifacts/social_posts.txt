@@ -1,6 +1,6 @@
 LinkedIn:
 
-Yesterday, Gemini CLI transitioned to Antigravity CLI. It's time to build your migration path. 🚀
+Today Gemini CLI transitioned to Antigravity CLI. It's time to build your migration path. 🚀
 
 AI assistants speed up coding. They also increase your pull request volume. You pay an orchestration tax. Reviewing huge diffs wastes the time you saved writing code and causes cognitive fatigue. 📉
 
@@ -24,7 +24,7 @@ Link to the full article and the GitHub repo in the comments 👇
 
 Twitter/Bluesky:
 
-Yesterday, Gemini CLI transitioned to Antigravity CLI! 🚀
+Today Gemini CLI transitioned to Antigravity CLI! 🚀
 
 Read my new guide: "Building an agentic PR reviewer with Antigravity SDK".
 
