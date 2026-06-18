@@ -1,15 +1,15 @@
 ---
-title: "Taming Code Review Fatigue with the Antigravity SDK | run-agy-sdk"
-description: "Learn how to automate the first pass of GitHub PR reviews using the Antigravity SDK. Offload cognitive load and catch bugs early. Install now!"
-keywords: ["Taming Code Reviews", "run-agy-sdk", "Antigravity SDK", "GitHub Action code review", "code review fatigue"]
+title: "Building an agentic PR reviewer with Antigravity SDK | run-agy-sdk"
+description: "Prepare for the June 2026 transition from Gemini CLI by migrating your automated PR review pipelines to the Antigravity SDK."
+keywords: ["Antigravity CLI migration", "run-agy-sdk", "Antigravity SDK", "GitHub Action code review", "Gemini CLI deprecation"]
 ---
 
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "TechArticle",
-  "headline": "Taming code review fatigue with the Antigravity SDK",
-  "description": "Learn how to automate the first pass of GitHub PR reviews using the Antigravity SDK. Offload cognitive load and catch bugs early.",
+  "headline": "Migrating to Antigravity SDK for Automated PR Reviews",
+  "description": "Prepare for the June 2026 transition from Gemini CLI by migrating your automated PR review pipelines to the Antigravity SDK.",
   "inLanguage": "en",
   "author": {
     "@type": "Person",
@@ -26,23 +26,19 @@ keywords: ["Taming Code Reviews", "run-agy-sdk", "Antigravity SDK", "GitHub Acti
 }
 </script>
 
-# Taming code review fatigue with the Antigravity SDK
+# Building an agentic PR reviewer with Antigravity SDK
 
 ![Blog Hero Image](artifacts/blog_hero_image_medium.png)
 
-With AI code assistants boosting coding velocity, human code review has become a major bottleneck due to cognitive fatigue. In this post, I will show you how to automate a "first-pass" review using the Google [Antigravity SDK](https://antigravity.google/product/antigravity-sdk) and the [run-agy-sdk](https://github.com/rsamborski/run-agy-sdk) composite [GitHub Action](https://github.com/features/actions) to find bugs early, leaving you free to focus on architecture and safeguarding quality.
+As announced in this [blog post](https://developers.googleblog.com/an-important-update-transitioning-gemini-cli-to-antigravity-cli/) on June 18, 2026, Gemini CLI and Gemini Code Assist IDE extensions will stop serving requests for Google AI Pro and Ultra, as well as those using it free of charge using Gemini Code Assist for individuals. Google is unifying its AI terminal tools by transitioning the community-focused Gemini CLI into Antigravity CLI, a new agent-first platform built for complex, multi-agent workflows.
 
-## The cognitive overload of modern code reviews
+With this transition timeline in place, development teams relying on Gemini CLI for repository management and automated tasks must establish a migration path. In this post, I will show you how to transition seamlessly by building an automated "first-pass" pull request reviewer using the Google [Antigravity SDK](https://antigravity.google/product/antigravity-sdk) and the [run-agy-sdk](https://github.com/rsamborski/run-agy-sdk) composite [GitHub Action](https://github.com/features/actions).
 
-Every morning, I open my GitHub dashboard and face an avalanche of new pull requests. Since our engineering team started using AI-powered code assistants, our coding velocity has skyrocketed. We are writing and shipping more code than ever before.
+## The orchestration tax
 
-But as [Addy Osmani](https://x.com/addyosmani) pointed out, there is an [orchestration tax](https://x.com/addyosmani/status/2059844244907696186) to using AI for coding. Namely, the time saved writing code is offset by the time spent reviewing it and context switching.
+The approach I am proposing also solves another pressing issue for modern engineering teams: cognitive overload. As [Addy Osmani](https://x.com/addyosmani) recently pointed out, there is an [orchestration tax](https://x.com/addyosmani/status/2059844244907696186) to using AI for coding. The time developers save generating code is often pushed onto reviewers as large, complex PRs, causing context switching and cognitive fatigue.
 
-In a team setting, this tax is multiplied. Because AI makes it so easy to generate code, developers often push the orchestration tax onto the reviewer. They generate large changes, run basic checks, and submit PRs, leaving the reviewer to deal with the cognitive load of finding subtle bugs and building a mental model of the code from scratch.
-
-To solve this, we need a hybrid approach. We do not need to let AI run completely unsupervised, nor do we need to exhaust human reviewers. Instead, we can automate a **first-pass review** by employing an autonomous agent to inspect code quality and flag potential bugs *before* a human developer even looks at the PR.
-
-***By offloading the tedious "first pass" search to an AI agent, human reviewers can focus on what they do best: high-level architecture, design feedback, and safeguarding quality.***
+By offloading the tedious "first pass" search to an Antigravity agent, human reviewers can mitigate this tax and focus on high-level architecture and safeguarding quality.
 
 ## Why we need automated agentic code reviews
 
@@ -60,6 +56,8 @@ To demonstrate it in practice I created an agentic review pipeline, which:
 2. Runs reviews inside isolated workspaces or sandboxes with custom policies to prevent shell or arbitrary code execution risks.  
 3. Enables the agent to use the GitHub MCP server to interact directly with the environment to write pull request comments and reviews.  
 4. Avoids using the `synchronize` trigger in pull request workflows to prevent redundant review runs and endless loops. Instead, runs reviews on `opened` and `reopened` events, and triggers subsequent passes manually by posting a `@agy /review` comment on the PR.
+
+![Agentic review pipeline](artifacts/pipeline_diagram.png)
 
 You can find the code at [run-agy-sdk](https://github.com/rsamborski/run-agy-sdk).
 
