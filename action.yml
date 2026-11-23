@@ -105,9 +105,6 @@ runs:
         fi
 
         export PROMPT="${PROMPT_TEXT}"
-        export GEMINI_API_KEY="${GEMINI_API_KEY}"
-        export GITHUB_TOKEN="${GITHUB_TOKEN}"
-        export TRUST_WORKSPACE="${TRUST_WORKSPACE}"
 
         python3 "${GITHUB_ACTION_PATH}/run_agent.py"
       env:
