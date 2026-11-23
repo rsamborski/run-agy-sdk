@@ -65,6 +65,7 @@ except ImportError:
 
 async def main() -> None:
     # 1. Retrieve environment variables
+    # Fall back to ANTIGRAVITY_API_KEY for backwards compatibility
     api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("ANTIGRAVITY_API_KEY")
     github_token = os.environ.get("GITHUB_TOKEN") or os.environ.get(
         "GITHUB_PERSONAL_ACCESS_TOKEN"
@@ -79,7 +80,9 @@ async def main() -> None:
 
     if not api_key:
         print(
-            "::error::API key is missing. Please set the 'api-key' input or GEMINI_API_KEY env var."
+            "::error::Gemini API key is missing. Please set the 'api-key' input "
+            "or GEMINI_API_KEY environment variable (for Dependabot PRs, also add "
+            "the secret under Settings > Secrets and variables > Dependabot)."
         )
         sys.exit(1)
 

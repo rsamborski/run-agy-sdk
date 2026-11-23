@@ -70,7 +70,7 @@ jobs:
           REPOSITORY: '${{ github.repository }}'
           ADDITIONAL_CONTEXT: '${{ inputs.additional_context }}'
         with:
-          api-key: '${{ secrets.ANTIGRAVITY_API_KEY || secrets.GEMINI_API_KEY }}'
+          api-key: '${{ secrets.GEMINI_API_KEY || secrets.ANTIGRAVITY_API_KEY }}'
           github-token: '${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
           trust-workspace: 'true'
           sandbox-profile: 'true'
