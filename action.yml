@@ -17,7 +17,7 @@ description: 'Execute the Google Antigravity SDK autonomous agent to review and 
 author: 'Remigiusz Samborski'
 inputs:
   api-key:
-    description: 'The Google Gemini / Antigravity API key to authenticate language model interactions'
+    description: 'The Gemini API key used to authenticate language model interactions'
     required: true
   github-token:
     description: 'GitHub token for pull request interactions and automated code feedback'
@@ -105,7 +105,7 @@ runs:
         fi
 
         export PROMPT="${PROMPT_TEXT}"
-        export GEMINI_API_KEY="${ANTIGRAVITY_API_KEY:-$GEMINI_API_KEY}"
+        export GEMINI_API_KEY="${GEMINI_API_KEY}"
         export GITHUB_TOKEN="${GITHUB_TOKEN}"
         export TRUST_WORKSPACE="${TRUST_WORKSPACE}"
 
@@ -115,7 +115,6 @@ runs:
         PROMPT: '${{ inputs.prompt }}'
         MODE: '${{ inputs.mode }}'
         GOAL_PROMPT: '${{ inputs.goal-prompt }}'
-        ANTIGRAVITY_API_KEY: '${{ inputs.api-key }}'
         GEMINI_API_KEY: '${{ inputs.api-key }}'
         REPOSITORY: '${{ github.repository }}'
         PULL_REQUEST_NUMBER: '${{ inputs.github_pr_number }}'

@@ -8,11 +8,12 @@ To use `run-agy-sdk` in another repository, you need to configure a GitHub Actio
 
 ### 1. Provision API Key Secrets
 
-The Antigravity action requires a Google Gemini or Antigravity API key to authenticate language model interactions.
+The Antigravity action requires a Gemini API key to authenticate language model interactions.
 
-1. Generate your API key.
+1. Generate a Gemini API key in [Google AI Studio](https://aistudio.google.com/app/api-keys).
 2. In your target repository, go to **Settings** > **Secrets and variables** > **Actions**.
-3. Create a new Repository Secret named `ANTIGRAVITY_API_KEY` and paste your API key as the value.
+3. Create a new repository secret named `GEMINI_API_KEY` and paste your API key as the value.
+4. *(Optional)* If you use Dependabot and want workflows to run on Dependabot pull requests, also go to **Settings** > **Secrets and variables** > **Dependabot** and add `GEMINI_API_KEY` there (workflows triggered by Dependabot cannot access **Actions** secrets).
 
 ### 2. Configure the GitHub Actions Workflow
 
@@ -52,7 +53,7 @@ jobs:
         uses: 'rsamborski/run-agy-sdk@main'
         id: 'agy_pr_review'
         with:
-          api-key: '${{ secrets.ANTIGRAVITY_API_KEY }}'
+          api-key: '${{ secrets.GEMINI_API_KEY }}'
           github-token: '${{ secrets.GITHUB_TOKEN || github.token }}'
           mode: 'review'
           prompt: '/antigravity-review'
