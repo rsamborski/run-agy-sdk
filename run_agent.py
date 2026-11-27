@@ -61,15 +61,53 @@ _FILESYSTEM_TOOLS = frozenset(
     }
 )
 
-_PATH_ARG_KEYS = (
-    "Path",
-    "path",
-    "AbsolutePath",
-    "TargetFile",
-    "file_path",
-    "DirectoryPath",
-    "directory",
-    "SearchPath",
+_NORMALIZED_PATH_ARG_KEYS = frozenset(
+    {
+        "path",
+        "paths",
+        "absolutepath",
+        "targetfile",
+        "filepath",
+        "filepaths",
+        "file",
+        "files",
+        "directorypath",
+        "directory",
+        "dir",
+        "searchpath",
+        "searchdirectory",
+        "root",
+        "folder",
+        "cwd",
+        "workdir",
+    }
+)
+
+_KNOWN_NON_PATH_FS_KEYS = frozenset(
+    {
+        "pattern",
+        "query",
+        "regex",
+        "glob",
+        "maxdepth",
+        "startline",
+        "endline",
+        "byteoffset",
+        "limit",
+        "offset",
+        "recursive",
+        "includes",
+        "excludes",
+        "extensions",
+        "caseinsensitive",
+        "ignorecase",
+        "fixedstrings",
+        "content",
+        "replacement",
+        "target",
+        "overwrite",
+        "append",
+    }
 )
 
 _REVIEW_MCP_TOOLS = [
@@ -167,25 +205,41 @@ def is_path_within_workspace(raw_path: str, workspace_real: str) -> bool:
         return False
 
 
+def _is_valid_path_value(val: Any, workspace_real: str) -> bool:
+    """Validate a single path string or non-empty sequence of path strings."""
+    if isinstance(val, str):
+        return is_path_within_workspace(val, workspace_real)
+    if isinstance(val, (list, tuple)) and val:
+        return all(
+            isinstance(item, str) and is_path_within_workspace(item, workspace_real)
+            for item in val
+        )
+    return False
+
+
 def validate_filesystem_args(args: Any, workspace_real: str) -> bool:
     """Validate that any path arguments in a filesystem tool call stay inside workspace_real."""
     if not isinstance(args, dict):
         return False
 
     checked_any = False
-    for key in _PATH_ARG_KEYS:
-        if key in args and args[key] is not None:
-            val = args[key]
-            if not isinstance(val, str) or not is_path_within_workspace(
-                val, workspace_real
-            ):
+    unknown_items: list[tuple[str, Any]] = []
+    for key, val in args.items():
+        if val is None:
+            continue
+        norm_key = str(key).lower().replace("_", "")
+        if norm_key in _NORMALIZED_PATH_ARG_KEYS:
+            if not _is_valid_path_value(val, workspace_real):
                 return False
             checked_any = True
+        elif norm_key not in _KNOWN_NON_PATH_FS_KEYS:
+            unknown_items.append((key, val))
 
-    if not checked_any:
-        str_vals = [v for v in args.values() if isinstance(v, str) and v.strip()]
-        if len(str_vals) == 1:
-            return is_path_within_workspace(str_vals[0], workspace_real)
+    if not checked_any and unknown_items:
+        # Fail closed on unrecognized argument keys that may carry path(s)
+        for _, val in unknown_items:
+            if not _is_valid_path_value(val, workspace_real):
+                return False
 
     return True
 
@@ -285,8 +339,16 @@ def is_github_mcp_repo_mismatch(
             candidate = f"{str(owner or '').strip()}/{str(repo or '').strip()}".lower()
             if candidate != expected_norm:
                 return True
-        query = str(args.get("query") or args.get("q") or "").lower()
-        if query and f"repo:{expected_norm}" not in query:
+        query = str(args.get("query") or args.get("q") or "").strip().lower()
+        if not query:
+            return True
+        repo_qualifiers = re.findall(r"(?<![a-zA-Z0-9_-])repo:([^\s)]+)", query)
+        scope_qualifiers = re.findall(
+            r"(?<![a-zA-Z0-9_-])(?:-repo|org|user):([^\s)]+)", query
+        )
+        if not repo_qualifiers or scope_qualifiers:
+            return True
+        if any(r.strip("'\"") != expected_norm for r in repo_qualifiers):
             return True
         return False
 
@@ -342,7 +404,9 @@ def validate_tool_call(
     if not tool_name:
         return False, "Empty tool name"
 
-    args = tool_args if isinstance(tool_args, dict) else {}
+    if tool_args is not None and not isinstance(tool_args, dict):
+        return False, f"Tool '{tool_name}' received non-dict arguments"
+    args = tool_args or {}
     base_tool = tool_name.rsplit("/", 1)[-1].rsplit("__", 1)[-1]
 
     if is_restricted_mode and base_tool not in allowed_restricted_tools:
@@ -441,8 +505,9 @@ def _build_mcp_deny_policies(
     for tool_name in enabled_mcp_tools:
         add_mcp_deny(
             [tool_name],
-            lambda args, bt=tool_name, repo=repository: is_github_mcp_repo_mismatch(
-                bt, args if isinstance(args, dict) else {}, repo
+            lambda args, bt=tool_name, repo=repository: (
+                not isinstance(args, dict)
+                or is_github_mcp_repo_mismatch(bt, args, repo)
             ),
             f"deny_cross_repo_{tool_name}",
         )
@@ -455,11 +520,11 @@ def _build_mcp_deny_policies(
     if write_pr_tools:
         add_mcp_deny(
             write_pr_tools,
-            lambda args, pr=pr_number, iss=issue_number: is_github_mcp_target_mismatch(
-                "pull_request_review_write",
-                args if isinstance(args, dict) else {},
-                pr,
-                iss,
+            lambda args, pr=pr_number, iss=issue_number: (
+                not isinstance(args, dict)
+                or is_github_mcp_target_mismatch(
+                    "pull_request_review_write", args, pr, iss
+                )
             ),
             "deny_wrong_pr_target",
         )
@@ -467,8 +532,8 @@ def _build_mcp_deny_policies(
     if "pull_request_review_write" in enabled_mcp_tools:
         add_mcp_deny(
             ["pull_request_review_write"],
-            lambda args: is_disallowed_review_event(
-                args if isinstance(args, dict) else {}
+            lambda args: (
+                not isinstance(args, dict) or is_disallowed_review_event(args)
             ),
             "deny_non_comment_review_event",
         )
@@ -476,11 +541,9 @@ def _build_mcp_deny_policies(
     if "add_issue_comment" in enabled_mcp_tools:
         add_mcp_deny(
             ["add_issue_comment"],
-            lambda args, pr=pr_number, iss=issue_number: is_github_mcp_target_mismatch(
-                "add_issue_comment",
-                args if isinstance(args, dict) else {},
-                pr,
-                iss,
+            lambda args, pr=pr_number, iss=issue_number: (
+                not isinstance(args, dict)
+                or is_github_mcp_target_mismatch("add_issue_comment", args, pr, iss)
             ),
             "deny_wrong_issue_target",
         )
@@ -641,11 +704,13 @@ async def main() -> None:
     is_restricted_mode = is_review_mode or bool(command_name)
     run_command_enabled = not is_restricted_mode and trust_workspace
 
-    if os.environ.get("GITHUB_ACTIONS") == "true" and is_restricted_mode:
+    if os.environ.get("GITHUB_ACTIONS") == "true" and (
+        is_restricted_mode or not trust_workspace
+    ):
         removed_configs = neutralize_untrusted_workspace_configs(workspace_real)
         for cfg_path in removed_configs:
             print(
-                f"Warning: Removed untrusted workspace config in restricted CI mode: {cfg_path}",
+                f"Warning: Removed untrusted workspace config in untrusted CI mode: {cfg_path}",
                 file=sys.stderr,
             )
 
@@ -760,12 +825,12 @@ async def main() -> None:
                 *workspace_policies,
                 *fs_realpath_denies,
                 *mcp_denies,
-                policy.deny("run_command"),
-                policy.deny("create_file"),
-                policy.deny("edit_file"),
-                policy.deny("read_url_content"),
-                policy.deny("search_web"),
-                *_as_policy_list(policy.confirm_run_command()),
+                policy.deny_all(),
+                policy.allow(github_mcp),
+                policy.allow("view_file"),
+                policy.allow("find_file"),
+                policy.allow("list_directory"),
+                policy.allow("search_directory"),
             ]
 
         allowed_restricted_tools = {
