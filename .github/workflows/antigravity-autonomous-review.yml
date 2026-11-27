@@ -33,11 +33,9 @@ on:
 permissions:
   contents: read
   pull-requests: write
-  issues: write
-  id-token: write
 
 jobs:
-  # Job 1: Antigravity Code Review on PR creation or updates
+  # Job 1: Antigravity Code Review on PR creation or manual dispatch
   antigravity-code-review:
     name: 'PR Automated Review'
     if: |
@@ -47,15 +45,19 @@ jobs:
     with:
       pull_request_number: ${{ inputs.pull_request_number }}
       additional_context: ${{ inputs.additional_context || '' }}
-    secrets: inherit
+    secrets:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      ANTIGRAVITY_API_KEY: ${{ secrets.ANTIGRAVITY_API_KEY }}
+      APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
 
   # Job 2: Comment-triggered On-Demand PR Review Dispatcher
   dispatch-comment-review:
     name: 'Comment Dispatcher Review'
-    # Only execute if the event is a comment on a pull request containing the trigger text
+    # Only execute on human maintainer comments on PRs containing the trigger text
     if: |
       github.event_name == 'issue_comment' &&
       github.event.issue.pull_request != null &&
+      github.event.comment.user.type != 'Bot' &&
       (github.event.comment.author_association == 'OWNER' ||
        github.event.comment.author_association == 'MEMBER' ||
        github.event.comment.author_association == 'COLLABORATOR') &&
@@ -64,4 +66,7 @@ jobs:
     with:
       pull_request_number: ''
       additional_context: ''
-    secrets: inherit
+    secrets:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      ANTIGRAVITY_API_KEY: ${{ secrets.ANTIGRAVITY_API_KEY }}
+      APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
