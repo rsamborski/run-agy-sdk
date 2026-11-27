@@ -10,3 +10,14 @@ updates:
         patterns: ["*"]
     assignees:
       - "rsamborski"
+
+  # Maintain hash-pinned Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      all:
+        patterns: ["*"]
+    assignees:
+      - "rsamborski"

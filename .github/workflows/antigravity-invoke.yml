@@ -21,6 +21,16 @@ on:
         type: 'string'
         description: 'Any additional context from the request'
         required: false
+    secrets:
+      GEMINI_API_KEY:
+        description: 'Gemini API key for language model authentication'
+        required: false
+      ANTIGRAVITY_API_KEY:
+        description: 'Legacy fallback secret name for Gemini API key'
+        required: false
+      APP_PRIVATE_KEY:
+        description: 'Optional GitHub App private key when USE_GITHUB_APP_TOKEN is enabled'
+        required: false
 
 concurrency:
   group: '${{ github.workflow }}-invoke-${{ github.event_name }}-${{ github.event.pull_request.number || github.event.issue.number }}'
@@ -36,14 +46,13 @@ jobs:
     timeout-minutes: 25
     permissions:
       contents: 'read'
-      id-token: 'write'
       issues: 'write'
       pull-requests: 'write'
     steps:
       - name: 'Mint identity token'
         id: 'mint_identity_token'
         if: |-
-          ${{ vars.APP_ID }}
+          ${{ vars.USE_GITHUB_APP_TOKEN == 'true' && vars.APP_ID != '' }}
         uses: 'actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510' # ratchet:actions/create-github-app-token@v3.3.0
         with:
           app-id: '${{ vars.APP_ID }}'
@@ -52,30 +61,30 @@ jobs:
           permission-issues: 'write'
           permission-pull-requests: 'write'
 
-      - name: 'Checkout Code'
+      - name: 'Checkout trusted action repository'
         uses: 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' # ratchet:actions/checkout@v7.0.1
         with:
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          path: '.trusted-action'
+          persist-credentials: false
+
+      - name: 'Checkout target workspace'
+        uses: 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' # ratchet:actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          path: 'workspace'
           persist-credentials: false
 
       - name: 'Run Antigravity SDK'
         id: 'run_agy'
-        uses: './'
-        env:
-          TITLE: '${{ github.event.pull_request.title || github.event.issue.title }}'
-          DESCRIPTION: '${{ github.event.pull_request.body || github.event.issue.body }}'
-          EVENT_NAME: '${{ github.event_name }}'
-          GITHUB_TOKEN: '${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
-          IS_PULL_REQUEST: '${{ !!github.event.pull_request }}'
-          ISSUE_NUMBER: '${{ github.event.pull_request.number || github.event.issue.number }}'
-          REPOSITORY: '${{ github.repository }}'
-          ADDITIONAL_CONTEXT: '${{ inputs.additional_context }}'
+        uses: './.trusted-action'
         with:
           api-key: '${{ secrets.GEMINI_API_KEY || secrets.ANTIGRAVITY_API_KEY }}'
-          github-token: '${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
-          trust-workspace: 'true'
+          github-token: '${{ steps.mint_identity_token.outputs.token || github.token }}'
+          workspace-dir: 'workspace'
+          trust-workspace: 'false'
           sandbox-profile: 'true'
-          upload_artifacts: "${{ vars.UPLOAD_ARTIFACTS || 'false' }}"
-          workflow_name: 'antigravity-invoke'
+          additional_context: '${{ inputs.additional_context }}'
           github_pr_number: '${{ github.event.pull_request.number }}'
           github_issue_number: '${{ github.event.issue.number }}'
           prompt: '/antigravity-invoke'

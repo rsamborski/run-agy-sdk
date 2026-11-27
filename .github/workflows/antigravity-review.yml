@@ -25,6 +25,16 @@ on:
         type: 'string'
         description: 'Any additional context from the request'
         required: false
+    secrets:
+      GEMINI_API_KEY:
+        description: 'Gemini API key for language model authentication'
+        required: false
+      ANTIGRAVITY_API_KEY:
+        description: 'Legacy fallback secret name for Gemini API key'
+        required: false
+      APP_PRIVATE_KEY:
+        description: 'Optional GitHub App private key when USE_GITHUB_APP_TOKEN is enabled'
+        required: false
 
 concurrency:
   group: '${{ github.workflow }}-review-${{ github.event_name }}-${{ github.event.pull_request.number || github.event.issue.number || github.ref_name }}'
@@ -40,62 +50,74 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: 'read'
-      id-token: 'write'
-      issues: 'write'
       pull-requests: 'write'
     steps:
       - name: 'Mint identity token'
         id: 'mint_identity_token'
         if: |-
-          ${{ vars.APP_ID }}
+          ${{ vars.USE_GITHUB_APP_TOKEN == 'true' && vars.APP_ID != '' }}
         uses: 'actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510' # ratchet:actions/create-github-app-token@v3.3.0
         with:
           app-id: '${{ vars.APP_ID }}'
           private-key: '${{ secrets.APP_PRIVATE_KEY }}'
           permission-contents: 'read'
-          permission-issues: 'write'
           permission-pull-requests: 'write'
 
       - name: 'Determine Pull Request Number'
         id: 'determine_pr'
         shell: 'bash'
         run: |-
-          PR_NUMBER="${{ inputs.pull_request_number || github.event.pull_request.number || github.event.issue.number }}"
-          if [ -z "$PR_NUMBER" ]; then
-            echo "Attempting to auto-detect Pull Request number for branch ${{ github.ref_name }}..."
-            PR_NUMBER=$(gh pr list --repo "${{ github.repository }}" --head "${{ github.ref_name }}" --json number --jq '.[0].number' || true)
-            if [ -n "$PR_NUMBER" ]; then
-              echo "Detected PR number: $PR_NUMBER"
-            else
-              echo "No open PR found for branch ${{ github.ref_name }}"
-            fi
+          set -euo pipefail
+          PR_NUMBER="${INPUT_PR_NUMBER:-${EVENT_PR_NUMBER:-${EVENT_ISSUE_NUMBER:-}}}"
+          if [ -z "${PR_NUMBER}" ]; then
+            echo "Attempting to auto-detect Pull Request number for branch ${REF_NAME}..."
+            PR_NUMBER="$(gh pr list --repo "${GH_REPO}" --head "${REF_NAME}" --json number --jq '.[0].number // empty' || true)"
           fi
-          echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
-        env:
-          GITHUB_TOKEN: '${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
 
-      - name: 'Checkout repository'
+          if [ -z "${PR_NUMBER}" ]; then
+            echo "::error::No open Pull Request number found to review." >&2
+            exit 1
+          fi
+
+          if [[ ! "${PR_NUMBER}" =~ ^[0-9]+$ ]]; then
+            echo "::error::Invalid Pull Request number format (expected digits only)." >&2
+            exit 1
+          fi
+
+          echo "Detected PR number: ${PR_NUMBER}"
+          echo "pr_number=${PR_NUMBER}" >> "${GITHUB_OUTPUT}"
+        env:
+          GH_TOKEN: '${{ steps.mint_identity_token.outputs.token || github.token }}'
+          GH_REPO: '${{ github.repository }}'
+          INPUT_PR_NUMBER: '${{ inputs.pull_request_number }}'
+          EVENT_PR_NUMBER: '${{ github.event.pull_request.number }}'
+          EVENT_ISSUE_NUMBER: '${{ github.event.issue.number }}'
+          REF_NAME: '${{ github.ref_name }}'
+
+      - name: 'Checkout trusted action repository'
         uses: 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' # ratchet:actions/checkout@v7.0.1
         with:
-          ref: ${{ steps.determine_pr.outputs.pr_number && format('refs/pull/{0}/merge', steps.determine_pr.outputs.pr_number) || github.ref }}
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          path: '.trusted-action'
+          persist-credentials: false
+
+      - name: 'Checkout pull request into isolated workspace'
+        uses: 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' # ratchet:actions/checkout@v7.0.1
+        with:
+          ref: ${{ format('refs/pull/{0}/merge', steps.determine_pr.outputs.pr_number) }}
+          path: 'pr-workspace'
           persist-credentials: false
 
       - name: 'Run Antigravity PR Review'
-        uses: './'
+        uses: './.trusted-action'
         id: 'agy_pr_review'
-        env:
-          GITHUB_TOKEN: '${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
-          ISSUE_TITLE: '${{ github.event.pull_request.title || github.event.issue.title }}'
-          ISSUE_BODY: '${{ github.event.pull_request.body || github.event.issue.body }}'
-          PULL_REQUEST_NUMBER: '${{ steps.determine_pr.outputs.pr_number }}'
-          REPOSITORY: '${{ github.repository }}'
-          ADDITIONAL_CONTEXT: '${{ inputs.additional_context }}'
         with:
           api-key: '${{ secrets.GEMINI_API_KEY || secrets.ANTIGRAVITY_API_KEY }}'
-          github-token: '${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
-          trust-workspace: 'true'
+          github-token: '${{ steps.mint_identity_token.outputs.token || github.token }}'
+          mode: 'review'
+          workspace-dir: 'pr-workspace'
+          trust-workspace: 'false'
           sandbox-profile: 'true'
-          upload_artifacts: "${{ vars.UPLOAD_ARTIFACTS || 'false' }}"
-          workflow_name: 'antigravity-review'
+          additional_context: '${{ inputs.additional_context }}'
           github_pr_number: '${{ steps.determine_pr.outputs.pr_number }}'
           prompt: '/antigravity-review'

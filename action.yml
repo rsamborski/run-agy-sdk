@@ -35,20 +35,20 @@ inputs:
     required: false
     default: 'true'
   trust-workspace:
-    description: 'Explicitly trust the repository workspace directory ("true" / "false") to bypass internal checks'
+    description: 'Explicitly trust the repository workspace directory ("true" / "false") to enable write/command tools'
     required: false
     default: 'false'
+  workspace-dir:
+    description: 'Path to the workspace directory the agent is allowed to inspect'
+    required: false
+    default: '.'
+  stream-output:
+    description: 'Whether to stream agent response tokens to stdout logs ("true" / "false"). Set "false" on sensitive private repositories.'
+    required: false
+    default: 'true'
   prompt:
-    description: 'The prompt or command to execute.'
+    description: 'The prompt or slash command to execute.'
     required: false
-  upload_artifacts:
-    description: 'Whether to upload artifacts.'
-    required: false
-    default: 'false'
-  workflow_name:
-    description: 'The GitHub workflow name.'
-    required: false
-    default: '${{ github.workflow }}'
   additional_context:
     description: 'Additional context for the agent.'
     required: false
@@ -80,8 +80,33 @@ runs:
     - name: 'Install Antigravity SDK'
       shell: 'bash'
       run: |-
-        python3 -m pip install --upgrade pip
-        python3 -m pip install google-antigravity tomli
+        set -euo pipefail
+        python3 -m pip install --require-hashes --no-deps -r "${GITHUB_ACTION_PATH}/requirements.txt"
+
+    - name: 'Prepare Isolated Credentials'
+      id: 'prepare_creds'
+      shell: 'bash'
+      run: |-
+        set -euo pipefail
+        umask 077
+        CREDS_DIR="$(mktemp -d "${RUNNER_TEMP:-/tmp}/agy-creds-XXXXXX")"
+        CREDS_FILE="${CREDS_DIR}/secrets.json"
+        python3 - "${CREDS_FILE}" <<'PY'
+        import json, os, sys
+        with open(sys.argv[1], "w", encoding="utf-8") as f:
+            json.dump(
+                {
+                    "api_key": os.environ.get("AGY_INPUT_API_KEY", ""),
+                    "github_token": os.environ.get("AGY_INPUT_GITHUB_TOKEN", ""),
+                },
+                f,
+            )
+        PY
+        echo "creds_dir=${CREDS_DIR}" >> "${GITHUB_OUTPUT}"
+        echo "creds_file=${CREDS_FILE}" >> "${GITHUB_OUTPUT}"
+      env:
+        AGY_INPUT_API_KEY: '${{ inputs.api-key }}'
+        AGY_INPUT_GITHUB_TOKEN: '${{ inputs.github-token }}'
 
     - name: 'Run Antigravity SDK Agent'
       id: 'agy_run'
@@ -90,12 +115,12 @@ runs:
         set -euo pipefail
 
         # Determine prompt text
-        PROMPT_TEXT="${PROMPT}"
+        PROMPT_TEXT="${AGY_INPUT_PROMPT}"
         if [ -z "${PROMPT_TEXT}" ]; then
-          if [ "${MODE}" = "review" ]; then
+          if [ "${AGY_MODE}" = "review" ]; then
             PROMPT_TEXT="/antigravity-review"
           else
-            PROMPT_TEXT="${GOAL_PROMPT}"
+            PROMPT_TEXT="${AGY_GOAL_PROMPT}"
           fi
         fi
 
@@ -104,24 +129,34 @@ runs:
           exit 1
         fi
 
-        export PROMPT="${PROMPT_TEXT}"
+        export AGY_PROMPT="${PROMPT_TEXT}"
 
         python3 "${GITHUB_ACTION_PATH}/run_agent.py"
       env:
-        TRUST_WORKSPACE: '${{ inputs.trust-workspace }}'
-        PROMPT: '${{ inputs.prompt }}'
-        MODE: '${{ inputs.mode }}'
-        GOAL_PROMPT: '${{ inputs.goal-prompt }}'
-        GEMINI_API_KEY: '${{ inputs.api-key }}'
-        REPOSITORY: '${{ github.repository }}'
-        PULL_REQUEST_NUMBER: '${{ inputs.github_pr_number }}'
-        GITHUB_PR_NUMBER: '${{ inputs.github_pr_number }}'
-        GITHUB_ISSUE_NUMBER: '${{ inputs.github_issue_number }}'
-        ADDITIONAL_CONTEXT: '${{ inputs.additional_context || inputs.goal-prompt }}'
-        GITHUB_TOKEN: '${{ inputs.github-token }}'
-        TITLE: '${{ github.event.pull_request.title || github.event.issue.title }}'
-        DESCRIPTION: '${{ github.event.pull_request.body || github.event.issue.body }}'
-        EVENT_NAME: '${{ github.event_name }}'
-        IS_PULL_REQUEST: '${{ !!github.event.pull_request }}'
-        ISSUE_NUMBER: '${{ github.event.pull_request.number || github.event.issue.number }}'
-        GITHUB_ACTION_PATH: '${{ github.action_path }}'
+        AGY_CREDENTIALS_FILE: '${{ steps.prepare_creds.outputs.creds_file }}'
+        AGY_CREDENTIALS_DIR: '${{ steps.prepare_creds.outputs.creds_dir }}'
+        AGY_WORKSPACE_DIR: '${{ inputs.workspace-dir }}'
+        AGY_SANDBOX_PROFILE: '${{ inputs.sandbox-profile }}'
+        AGY_TRUST_WORKSPACE: '${{ inputs.trust-workspace }}'
+        AGY_STREAM_OUTPUT: '${{ inputs.stream-output }}'
+        AGY_INPUT_PROMPT: '${{ inputs.prompt }}'
+        AGY_MODE: '${{ inputs.mode }}'
+        AGY_GOAL_PROMPT: '${{ inputs.goal-prompt }}'
+        AGY_REPOSITORY: '${{ github.repository }}'
+        AGY_PR_NUMBER: '${{ inputs.github_pr_number }}'
+        AGY_ISSUE_NUMBER: '${{ inputs.github_issue_number }}'
+        AGY_ADDITIONAL_CONTEXT: '${{ inputs.additional_context || inputs.goal-prompt }}'
+        AGY_TITLE: '${{ github.event.pull_request.title || github.event.issue.title }}'
+        AGY_DESCRIPTION: '${{ github.event.pull_request.body || github.event.issue.body }}'
+        AGY_EVENT_NAME: '${{ github.event_name }}'
+        AGY_IS_PULL_REQUEST: '${{ !!github.event.pull_request }}'
+
+    - name: 'Cleanup Isolated Credentials'
+      if: always()
+      shell: 'bash'
+      run: |-
+        if [ -n "${AGY_CREDENTIALS_DIR:-}" ] && [ -d "${AGY_CREDENTIALS_DIR}" ]; then
+          rm -rf "${AGY_CREDENTIALS_DIR}"
+        fi
+      env:
+        AGY_CREDENTIALS_DIR: '${{ steps.prepare_creds.outputs.creds_dir }}'
